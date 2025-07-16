@@ -1,30 +1,34 @@
-import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import data from '../assets/data'
 
-function OrderModal ({modalMenu, setModalOn, cart, setCart}) {
-    const [ options, setOptions ] = useState({'온도': 0, '진하기': 0, '사이즈': 0})
-    const [ quantity, setQuantity ] = useState(1)
+function OrderModal() {
+    const { modalMenu, options, quantity } = useSelector(state => state.orderModalState)
+
+    const dispatch = useDispatch()
+    const resetOrderModal = () => dispatch({ type: "orderModal/resetOrderModal" })
+    const setQuantity = (quantity) => dispatch({ type: "orderModal/setQuantity", quantity })
+
+    const addToCart = (cartItem) => dispatch({ type: "cart/addToCart", cartItem })
+    
     const itemOptions = data.options
-    console.log(options)
+
     return (
         <>
             {modalMenu ? (
-                <section className="modal-backdrop" onClick={() => setModalOn(false)}>
+                <section className="modal-backdrop" onClick={resetOrderModal}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className='modal-item'>
-                            <img src={modalMenu.img}/>
+                            <img src={modalMenu.img} />
                             <div>
                                 <h3>{modalMenu.name}</h3>
                                 <div>{modalMenu.description}</div>
                             </div>
                         </div>
                         <ul className="options">
-                            {Object.keys(itemOptions).map(el => <Option 
-                                key={el} 
-                                options={options} 
-                                setOptions={setOptions} 
-                                name={el} 
-                                itemOptions={itemOptions[el]} 
+                            {Object.keys(itemOptions).map(el => <Option
+                                key={el}
+                                name={el}
+                                itemOptions={itemOptions[el]}
                             />)}
                         </ul>
                         <div className="submit">
@@ -33,8 +37,8 @@ function OrderModal ({modalMenu, setModalOn, cart, setCart}) {
                                 <input id="count" type="number" value={quantity} min='1' onChange={(event) => setQuantity(Number(event.target.value))} />
                             </div>
                             <button onClick={() => {
-                                setCart([...cart, { options, quantity, id: modalMenu.id}])
-                                setModalOn(false)
+                                addToCart({ options, quantity, id: modalMenu.id })
+                                resetOrderModal()
                             }}>장바구니 넣기</button>
                         </div>
                     </div>
@@ -44,14 +48,19 @@ function OrderModal ({modalMenu, setModalOn, cart, setCart}) {
     )
 }
 
-function Option ({name, options, setOptions, itemOptions}) {
+function Option({ name, itemOptions }) {
+    const { options } = useSelector(state => state.orderModalState)
+
+    const dispatch = useDispatch()
+    const setOptions = (options) => dispatch({ type: "orderModal/setOptions", options })
+
     return (
         <li className='option'>
             {name}
             <ul>
                 {itemOptions.map((option, idx) => (
                     <li key={option}>
-                        <input type='radio' name={name} checked={options[name] === idx} onChange={() => setOptions({...options, [name]: idx})} />
+                        <input type='radio' name={name} checked={options[name] === idx} onChange={() => setOptions({ ...options, [name]: idx })} />
                         {option}
                     </li>
                 ))}
